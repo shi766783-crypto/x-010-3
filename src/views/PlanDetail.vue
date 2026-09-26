@@ -8,6 +8,7 @@ import LuggageList from '../components/plan/LuggageList.vue'
 import TodoList from '../components/plan/TodoList.vue'
 import RecordSection from '../components/plan/RecordSection.vue'
 import SummarySection from '../components/plan/SummarySection.vue'
+import PlanStatusTag from '../components/plan/PlanStatusTag.vue'
 
 const store = useTravelStore()
 const route = useRoute()
@@ -39,6 +40,7 @@ function onDelete() {
       <div class="head-left">
         <h2 class="detail-name">{{ plan.name }}</h2>
         <div class="detail-tags">
+          <PlanStatusTag :plan="plan" show-countdown />
           <span class="tag tag-blue">{{ plan.tripType }}</span>
           <span class="tag tag-green">{{ plan.destinationType }}</span>
           <span class="tag tag-gray">{{ plan.transport }}</span>

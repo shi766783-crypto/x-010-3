@@ -5,11 +5,12 @@ export function formatMoney(value) {
   return `¥${fixed}`
 }
 
-// 日期格式化：YYYY-MM-DD -> YYYY年M月D日
+// 日期格式化：YYYY-MM-DD -> YYYY年M月D日；缺失或格式异常时原样兜底，避免渲染报错
 export function formatDate(date) {
-  if (!date) return ''
-  const [y, m, d] = date.split('-')
-  return `${y}年${Number(m)}月${Number(d)}日`
+  if (!date || typeof date !== 'string') return date ? String(date) : ''
+  const match = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(date.trim())
+  if (!match) return date
+  return `${Number(match[1])}年${Number(match[2])}月${Number(match[3])}日`
 }
 
 // 计算两个日期之间的天数（含首尾）

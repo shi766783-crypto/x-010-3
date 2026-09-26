@@ -3,12 +3,19 @@ import { useRouter } from 'vue-router'
 import { useTravelStore } from '../stores/travel'
 import { formatDate, formatMoney } from '../utils/format'
 import { planTotalSpend, planPackingRate } from '../services/selectors'
+import { planStatus } from '../services/planStatus'
+import { PLAN_STATUS } from '../constants'
+import PlanStatusTag from '../components/plan/PlanStatusTag.vue'
 
 const store = useTravelStore()
 const router = useRouter()
 
 function tripTypeClass(type) {
   return { 出国: 'tag-red', 长途: 'tag-orange', 出差: 'tag-blue' }[type] || 'tag-green'
+}
+
+function isEnded(plan) {
+  return planStatus(plan).status === PLAN_STATUS.ENDED
 }
 
 function onDelete(plan) {
@@ -26,7 +33,13 @@ function onDelete(plan) {
     </div>
 
     <div v-if="store.plans.length" class="plan-grid">
-      <div v-for="plan in store.plans" :key="plan.id" class="plan-card" @click="router.push(`/plans/${plan.id}`)">
+      <div
+        v-for="plan in store.plans"
+        :key="plan.id"
+        class="plan-card"
+        :class="{ 'plan-card-ended': isEnded(plan) }"
+        @click="router.push(`/plans/${plan.id}`)"
+      >
         <div class="plan-cover">
           <img v-if="plan.photo" :src="plan.photo" alt="目的地照片" />
           <div v-else class="plan-cover-placeholder">{{ plan.destination.slice(0, 1) }}</div>
@@ -37,9 +50,12 @@ function onDelete(plan) {
             <span class="tag" :class="tripTypeClass(plan.tripType)">{{ plan.tripType }}</span>
           </div>
           <p class="plan-dest text-secondary">{{ plan.destination }} · {{ plan.destinationType }}</p>
-          <p class="plan-date text-muted">
-            {{ formatDate(plan.startDate) }} 至 {{ formatDate(plan.endDate) }} · {{ plan.days }} 天
-          </p>
+          <div class="plan-date-row">
+            <p class="plan-date text-muted">
+              {{ formatDate(plan.startDate) }} 至 {{ formatDate(plan.endDate) }} · {{ plan.days }} 天
+            </p>
+            <PlanStatusTag :plan="plan" show-countdown />
+          </div>
           <div class="plan-meta">
             <span>{{ plan.memberCount }} 人 · {{ plan.transport }}</span>
           </div>
@@ -94,6 +110,29 @@ function onDelete(plan) {
 .plan-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
+}
+
+/* 已结束计划弱化处理 */
+.plan-card-ended {
+  opacity: 0.6;
+}
+
+.plan-card-ended .plan-cover {
+  filter: grayscale(0.8);
+}
+
+.plan-card-ended:hover {
+  box-shadow: var(--shadow);
+  transform: none;
+}
+
+.plan-date-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
 }
 
 .plan-cover {

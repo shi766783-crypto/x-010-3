@@ -19,6 +19,19 @@ export const EXPENSE_CATEGORIES = [
   { key: 'otherCost', label: '其他' },
 ]
 
+// 计划状态（根据当天日期与起止时间自动推导）
+export const PLAN_STATUS = {
+  UPCOMING: 'upcoming', // 未出发
+  ONGOING: 'ongoing', // 进行中
+  ENDED: 'ended', // 已结束
+}
+
+export const PLAN_STATUS_LABEL = {
+  [PLAN_STATUS.UPCOMING]: '未出发',
+  [PLAN_STATUS.ONGOING]: '进行中',
+  [PLAN_STATUS.ENDED]: '已结束',
+}
+
 // 目的地类型（国内 / 国外）
 export const DESTINATION_TYPES = {
   DOMESTIC: '国内',
