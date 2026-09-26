@@ -1,14 +1,19 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useTravelStore } from '../stores/travel'
-import { formatDate, formatMoney } from '../utils/format'
-import { planTotalSpend, planPackingRate } from '../services/selectors'
+import { formatDateRange, formatMoney } from '../utils/format'
+import { planTotalSpend, planPackingRate, planStatus, PLAN_STATUS } from '../services/selectors'
+import PlanStatusTag from '../components/plan/PlanStatusTag.vue'
 
 const store = useTravelStore()
 const router = useRouter()
 
 function tripTypeClass(type) {
   return { 出国: 'tag-red', 长途: 'tag-orange', 出差: 'tag-blue' }[type] || 'tag-green'
+}
+
+function isEnded(plan) {
+  return planStatus(plan).status === PLAN_STATUS.ENDED
 }
 
 function onDelete(plan) {
@@ -26,19 +31,27 @@ function onDelete(plan) {
     </div>
 
     <div v-if="store.plans.length" class="plan-grid">
-      <div v-for="plan in store.plans" :key="plan.id" class="plan-card" @click="router.push(`/plans/${plan.id}`)">
+      <div
+        v-for="plan in store.plans"
+        :key="plan.id"
+        class="plan-card"
+        :class="{ 'plan-ended': isEnded(plan) }"
+        @click="router.push(`/plans/${plan.id}`)"
+      >
         <div class="plan-cover">
           <img v-if="plan.photo" :src="plan.photo" alt="目的地照片" />
           <div v-else class="plan-cover-placeholder">{{ plan.destination.slice(0, 1) }}</div>
+          <PlanStatusTag :plan="plan" class="cover-status" />
         </div>
         <div class="plan-body">
-          <div class="flex-between">
+          <div class="plan-title-row">
             <h3 class="plan-name">{{ plan.name }}</h3>
             <span class="tag" :class="tripTypeClass(plan.tripType)">{{ plan.tripType }}</span>
           </div>
           <p class="plan-dest text-secondary">{{ plan.destination }} · {{ plan.destinationType }}</p>
           <p class="plan-date text-muted">
-            {{ formatDate(plan.startDate) }} 至 {{ formatDate(plan.endDate) }} · {{ plan.days }} 天
+            {{ formatDateRange(plan.startDate, plan.endDate) }}
+            <template v-if="plan.days"> · {{ plan.days }} 天</template>
           </p>
           <div class="plan-meta">
             <span>{{ plan.memberCount }} 人 · {{ plan.transport }}</span>
@@ -96,9 +109,32 @@ function onDelete(plan) {
   transform: translateY(-2px);
 }
 
+/* 已结束的计划在列表中弱化处理 */
+.plan-ended {
+  opacity: 0.62;
+}
+
+.plan-ended .plan-cover {
+  filter: grayscale(0.8);
+}
+
+.plan-ended .plan-name {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
 .plan-cover {
+  position: relative;
   height: 140px;
   background: linear-gradient(135deg, #4f6ef7, #7c5cf0);
+}
+
+.cover-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
 .plan-cover img {
@@ -122,9 +158,19 @@ function onDelete(plan) {
   flex: 1;
 }
 
+.plan-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .plan-name {
   font-size: 16px;
   margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .plan-dest {

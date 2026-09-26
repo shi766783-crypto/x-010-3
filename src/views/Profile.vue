@@ -2,9 +2,10 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTravelStore } from '../stores/travel'
-import { formatMoney, formatDate } from '../utils/format'
-import { planTotalSpend, planPackingRate } from '../services/selectors'
+import { formatMoney, formatDateRange } from '../utils/format'
+import { planTotalSpend, planPackingRate, planStatus, PLAN_STATUS } from '../services/selectors'
 import StarRating from '../components/common/StarRating.vue'
+import PlanStatusTag from '../components/plan/PlanStatusTag.vue'
 
 const store = useTravelStore()
 const router = useRouter()
@@ -12,6 +13,10 @@ const router = useRouter()
 const stats = computed(() => store.dashboardStats)
 const unlocked = computed(() => store.achievements.filter((a) => a.unlocked))
 const summarized = computed(() => store.plans.filter((p) => p.summary))
+
+function isEnded(plan) {
+  return planStatus(plan).status === PLAN_STATUS.ENDED
+}
 </script>
 
 <template>
@@ -37,13 +42,20 @@ const summarized = computed(() => store.plans.filter((p) => p.summary))
       <h3 class="card-title">我的出行计划</h3>
       <table v-if="store.plans.length" class="table">
         <thead>
-          <tr><th>名称</th><th>目的地</th><th>日期</th><th>花费</th><th>打包</th></tr>
+          <tr><th>名称</th><th>状态</th><th>目的地</th><th>日期</th><th>花费</th><th>打包</th></tr>
         </thead>
         <tbody>
-          <tr v-for="p in store.plans" :key="p.id" class="link-row" @click="router.push(`/plans/${p.id}`)">
+          <tr
+            v-for="p in store.plans"
+            :key="p.id"
+            class="link-row"
+            :class="{ 'row-ended': isEnded(p) }"
+            @click="router.push(`/plans/${p.id}`)"
+          >
             <td>{{ p.name }}</td>
+            <td><PlanStatusTag :plan="p" /></td>
             <td>{{ p.destination }}</td>
-            <td>{{ formatDate(p.startDate) }} - {{ formatDate(p.endDate) }}</td>
+            <td class="text-secondary">{{ formatDateRange(p.startDate, p.endDate) }}</td>
             <td>{{ formatMoney(planTotalSpend(p)) }}</td>
             <td>{{ planPackingRate(p) }}%</td>
           </tr>
@@ -99,6 +111,11 @@ const summarized = computed(() => store.plans.filter((p) => p.summary))
 
 .link-row {
   cursor: pointer;
+}
+
+.row-ended {
+  opacity: 0.6;
+  color: var(--text-muted);
 }
 
 .summary-list {
